@@ -1,5 +1,5 @@
 import { getRequestEvent } from '$app/server'
-import * as auth from '$lib/server/auth'
+import { invalidateSession, deleteSessionTokenCookie } from '$lib/server/auth/utils'
 import type { Actions, PageServerLoad } from './$types'
 import { fail, redirect } from '@sveltejs/kit'
 
@@ -13,8 +13,8 @@ export const actions: Actions = {
 		if (!event.locals.session) {
 			return fail(401)
 		}
-		await auth.invalidateSession(event.locals.session.id)
-		auth.deleteSessionTokenCookie(event)
+		await invalidateSession(event.locals.session.id)
+		deleteSessionTokenCookie(event)
 
 		return redirect(302, '/demo/lucia/login')
 	}

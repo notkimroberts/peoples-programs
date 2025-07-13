@@ -14,5 +14,5 @@ export async function createSession(token: string, userId: string) {
 		expiresAt: new Date(Date.now() + DAY_IN_MS * 30)
 	}
 	await db.insert(session).values(sessionValue)
-	return session
+	return sessionValue
 }

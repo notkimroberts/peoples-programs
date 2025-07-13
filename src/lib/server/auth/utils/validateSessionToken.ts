@@ -24,17 +24,17 @@ export async function validateSessionToken(token: string) {
 	}
 	const { session: sessionResult, user: userResult } = result
 
-	const sessionExpired = Date.now() >= session.expiresAt.getTime()
+	const sessionExpired = Date.now() >= sessionResult.expiresAt.getTime()
 	if (sessionExpired) {
 		await db.delete(session).where(eq(session.id, session.id))
 		return { session: null, user: null }
 	}
 
-	const renewSession = Date.now() >= session.expiresAt.getTime() - DAY_IN_MS * 15
+	const renewSession = Date.now() >= sessionResult.expiresAt.getTime() - DAY_IN_MS * 15
 	if (renewSession) {
-		session.expiresAt = new Date(Date.now() + DAY_IN_MS * 30)
+		sessionResult.expiresAt = new Date(Date.now() + DAY_IN_MS * 30)
 		await db.update(session).set({ expiresAt: session.expiresAt }).where(eq(session.id, session.id))
 	}
 
-	return { session, user }
+	return { session: sessionResult, user: userResult }
 }

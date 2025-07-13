@@ -1,3 +1,3 @@
-import { session } from '$lib/server/db/tables/schema'
+import { session } from '$lib/db/tables'
 
 export type Session = typeof session.$inferSelect

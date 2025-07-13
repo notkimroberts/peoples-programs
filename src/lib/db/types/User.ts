@@ -1,3 +1,3 @@
-import { user } from '$lib/server/db/tables/schema'
+import { user } from '$lib/db/tables'
 
 export type User = typeof user.$inferSelect

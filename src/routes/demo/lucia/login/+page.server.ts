@@ -1,11 +1,13 @@
-import * as auth from '$lib/server/auth'
-import { db } from '$lib/server/db'
-import * as table from '$lib/server/db/tables/schema'
+import { getDb } from '$lib/db/server'
+import { user } from '$lib/db/tables'
+import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/server/auth/utils'
 import type { Actions, PageServerLoad } from './$types'
 import { hash, verify } from '@node-rs/argon2'
 import { encodeBase32LowerCase } from '@oslojs/encoding'
 import { fail, redirect } from '@sveltejs/kit'
 import { eq } from 'drizzle-orm'
+
+const db = getDb()
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
@@ -29,7 +31,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Invalid password (min 6, max 255 characters)' })
 		}
 
-		const results = await db.select().from(table.user).where(eq(table.user.username, username))
+		const results = await db.select().from(user).where(eq(user.username, username))
 
 		const existingUser = results.at(0)
 		if (!existingUser) {
@@ -46,9 +48,9 @@ export const actions: Actions = {
 			return fail(400, { message: 'Incorrect username or password' })
 		}
 
-		const sessionToken = auth.generateSessionToken()
-		const session = await auth.createSession(sessionToken, existingUser.id)
-		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt)
+		const sessionToken = generateSessionToken()
+		const session = await createSession(sessionToken, existingUser.id)
+		setSessionTokenCookie(event, sessionToken, session.expiresAt)
 
 		return redirect(302, '/demo/lucia')
 	},
@@ -74,12 +76,12 @@ export const actions: Actions = {
 		})
 
 		try {
-			await db.insert(table.user).values({ id: userId, username, passwordHash })
-			const sessionToken = auth.generateSessionToken()
-			const session = await auth.createSession(sessionToken, userId)
-			auth.setSessionTokenCookie(event, sessionToken, session.expiresAt)
-		} catch {
-			return fail(500, { message: 'An error has occurred' })
+			await db.insert(user).values({ id: userId, username, passwordHash })
+			const sessionToken = generateSessionToken()
+			const session = await createSession(sessionToken, userId)
+			setSessionTokenCookie(event, sessionToken, session.expiresAt)
+		} catch (error) {
+			return fail(500, { message: error.message ?? 'An error has occurred' })
 		}
 		return redirect(302, '/demo/lucia')
 	}
