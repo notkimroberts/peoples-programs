@@ -81,7 +81,7 @@ export const actions: Actions = {
 			const session = await createSession(sessionToken, userId)
 			setSessionTokenCookie(event, sessionToken, session.expiresAt)
 		} catch (error) {
-			return fail(500, { message: error.message ?? 'An error has occurred' })
+			return fail(500, { message: error.message ?? 'Failed to register new user' })
 		}
 		return redirect(302, '/demo/lucia')
 	}
